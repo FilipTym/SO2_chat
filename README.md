@@ -1,44 +1,53 @@
 # Systemy Operacyjne 2 – Projekt 1
 
-**Autor:** Filip Tymiński  
-**Data:** Marzec 2025
+**Autorzy:** Filip Tymiński i Miłosz Halicki  
+**Data:** Maj 2025
 
 ## 📌 Temat projektu
 
-Projekt polega na stworzeniu prostego systemu komunikacji klient–serwer w języku Python z użyciem gniazd TCP, wielowątkowości oraz graficznego interfejsu użytkownika (`tkinter`). System pozwala wielu użytkownikom rozmawiać w czasie rzeczywistym przez lokalną sieć.
+Projekt polega na stworzeniu prostego, wielowątkowego systemu komunikacji klient–serwer w języku Python. System umożliwia rozmowę wielu użytkowników w czasie rzeczywistym przy użyciu lokalnej sieci i podstawowych mechanizmów synchronizacji.
 
-## 💡 Opis działania
+## 🧠 Opis problemu
 
-### Serwer (`server.py`)
+Z punktu widzenia systemów operacyjnych projekt demonstruje klasyczne zagadnienia:
 
-- Nasłuchuje na adresie `127.0.0.1:8084`.
-- Obsługuje wielu klientów równocześnie (każdy w osobnym wątku).
-- Rejestruje pseudonimy użytkowników.
-- Wysyła wiadomości od jednego klienta do wszystkich pozostałych (broadcast).
-- Obsługuje komendę `/quit` do wylogowania klienta.
+- **Komunikacja międzyprocesowa (IPC)** — dzięki gniazdom TCP,
+- **Wielowątkowość i równoległość** — obsługa wielu klientów jednocześnie,
+- **Sekcje krytyczne i synchronizacja** — ochrona współdzielonych zasobów,
+- **Zamykanie połączeń i obsługa wyjątków** — niezawodność komunikacji.
 
-### Klient (`klient.py`)
+Projekt pokazuje, jak przy użyciu prostych narzędzi zaimplementować model klient–serwer, który musi być odporny na błędy, bezpieczny i wydajny.
 
-- Graficzny interfejs oparty na `tkinter`:
-  - okno czatu (zielony tekst na czarnym tle),
-  - pole do wpisywania wiadomości,
-  - obsługa przycisku Enter.
-- Łączy się z serwerem i wysyła swój pseudonim.
-- Odbiera i wyświetla wiadomości w czasie rzeczywistym.
-- Komenda `/quit` zamyka aplikację.
+## 🔁 Struktura wątków
 
-## 🧱 Kluczowe elementy techniczne
+### Wątki na serwerze
 
-- **Wątki** (`threading`): obsługa wielu klientów na serwerze oraz odbieranie wiadomości w tle u klienta.
-- **Gniazda TCP** (`socket`): komunikacja klient–serwer.
-- **Synchronizacja** (`Lock`): bezpieczna modyfikacja listy aktywnych klientów.
-- **GUI** (`tkinter`): prosty, terminalowy interfejs graficzny klienta.
+- **Główny wątek serwera:** nasłuchuje połączeń na porcie.
+- **Wątki klientów:** każdy klient obsługiwany jest w osobnym wątku (`threading.Thread`), co umożliwia równoległe przetwarzanie wiadomości.
 
-## ⚠️ Napotkane problemy i rozwiązania
+### Wątki po stronie klienta
 
-- **Rozłączenia klientów**: serwer obsługuje sytuacje, gdy klient zamknie aplikację bez wysłania `/quit`.
-- **Błąd warunku uruchamiania**: poprawiono `if _name_ == "_main_"` → `if __name__ == "__main__":`.
-- **Bezpieczeństwo GUI**: aktualizacja interfejsu wykonywana wyłącznie przez główny wątek.
+- **Wątek GUI (główny wątek Tkintera):** obsługuje interfejs użytkownika.
+- **Wątek odbierania wiadomości:** działa w tle, słucha wiadomości przychodzących z serwera.
+
+## 🔐 Sekcje krytyczne i synchronizacja
+
+### Sekcje krytyczne
+
+- **Słownik klientów `clients`** na serwerze: wspólna struktura danych modyfikowana przez wiele wątków.
+- **Interfejs GUI** klienta: `tkinter` nie jest bezpieczny wątkowo — wszystkie operacje GUI muszą być wykonywane w głównym wątku.
+
+### Zastosowane rozwiązania
+
+- **Blokada (`threading.Lock`)** zabezpiecza dostęp do listy klientów na serwerze.
+- **Brak bezpośredniego dostępu do GUI z innych wątków:** komunikaty są przekazywane poprzez odpowiednie metody aktualizujące interfejs tylko w głównym wątku.
+
+## 💡 Funkcjonalność
+
+- Rejestracja pseudonimu po połączeniu.
+- Wysyłanie i odbieranie wiadomości w czasie rzeczywistym.
+- Informacja o dołączeniu/opuszczeniu czatu przez innych użytkowników.
+- Komenda `/quit` umożliwia bezpieczne opuszczenie aplikacji.
 
 ## ▶️ Uruchamianie
 
