@@ -45,9 +45,16 @@ Projekt polega na stworzeniu prostego systemu komunikacji klient–serwer w jęz
 ### 1. Serwer:
 ```bash
 python server.py
+```
+### 1. Klient:
+```bash
+python klient.py
+```
 
-## 🧪 **Przykład działania**
+## 🧪 Przykład działania
 1. Uruchom serwer (server.py).
 2. Uruchom klienta (klient.py) – możesz uruchomić kilka instancji w różnych terminalach lub na różnych komputerach.
 3. Podaj pseudonimy i rozpocznij rozmowę.
 4. Aby opuścić czat, wpisz /quit.
+
+## Projekt wykonany w ramach przedmiotu "Systemy Operacyjne 2" na kierunku Informatyka.
