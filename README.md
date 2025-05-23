@@ -66,4 +66,4 @@ python klient.py
 3. Podaj pseudonimy i rozpocznij rozmowę.
 4. Aby opuścić czat, wpisz /quit.
 
-## Projekt wykonany w ramach przedmiotu "Systemy Operacyjne 2" na kierunku Informatyka.
+## Projekt wykonany w ramach przedmiotu "Systemy Operacyjne 2" na kierunku Informatyka Techniczna.
