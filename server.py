@@ -26,13 +26,13 @@ def broadcast(message, exclude=None):
                     client.close()
                     del clients[client]
 
-# Funkcja uruchamiana w osobnym wątku – obsługuje jednego klienta
+# Funkcja uruchamiana w osobnym wątku obsługuje jednego klienta
 def handle_client(conn, addr):
     try:
         # Odbieramy od klienta jego nick (pierwsza wiadomość po połączeniu)
         nickname = conn.recv(1024).decode().strip()
     except:
-        # Jeśli nie uda się odebrać – zamykamy połączenie
+        # Jeśli nie uda się odebrać zamykamy połączenie
         conn.close()
         return
 
@@ -62,7 +62,7 @@ def handle_client(conn, addr):
             # Jeśli nastąpi błąd odbioru (np. klient zamknął aplikację)
             break
 
-    # Po opuszczeniu pętli – klient się rozłącza
+    # Po opuszczeniu pętli klient się rozłącza
     with clients_lock:
         del clients[conn]  # Usuwamy go ze słownika
 
@@ -86,9 +86,9 @@ def start_server():
     server.listen()
     print(f"[Server] Listening on {HOST}:{PORT}...")
 
-    # Nieskończona pętla – serwer cały czas działa
+    # Nieskończona pętla serwer cały czas działa
     while True:
-        # Czekamy na nowego klienta – blokujące wywołanie
+        # Czekamy na nowego klienta blokujące wywołanie
         conn, addr = server.accept()
 
         # Dla każdego nowego klienta uruchamiamy osobny wątek
