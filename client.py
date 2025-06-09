@@ -6,6 +6,8 @@ from tkinter import simpledialog, scrolledtext, messagebox
 HOST = '127.0.0.1'
 PORT = 8084
 
+
+#Chat
 class ChatClient:
     def __init__(self, master):
         self.master = master
