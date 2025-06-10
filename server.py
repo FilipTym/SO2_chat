@@ -1,99 +1,75 @@
 import socket
 import threading
 
-# Adres IP i port, na którym serwer będzie nasłuchiwać
+# Server IP and port
 HOST = '127.0.0.1'
 PORT = 8084
 
-# Słownik przechowujący aktualnie połączonych klientów i ich nicki
+# Dictionary to store connected clients and their nicknames
 clients = {}
 
-# Lock (mutex) do bezpiecznego dostępu do słownika 'clients'
+# Lock (mutex) to ensure thread-safe access to the 'clients' dictionary
 clients_lock = threading.Lock()
 
-# Funkcja do rozsyłania wiadomości do wszystkich klientów (z opcją wykluczenia nadawcy)
+# Function to broadcast messages to all connected clients (excluding the sender if specified)
 def broadcast(message, exclude=None):
     with clients_lock:
-        # Iterujemy po wszystkich klientach
-        for client, nick in clients.items():
-            # Pomijamy klienta, który wysłał wiadomość (jeśli podany)
+        for client, nick in list(clients.items()):
             if client != exclude:
                 try:
-                    # Wysyłamy wiadomość (zakładamy kodowanie UTF-8)
                     client.send(message.encode())
                 except:
-                    # Jeśli nie uda się wysłać, to zamykamy i usuwamy klienta
                     client.close()
                     del clients[client]
 
-# Funkcja uruchamiana w osobnym wątku obsługuje jednego klienta
+# Function that runs in a separate thread to handle a single client
 def handle_client(conn, addr):
     try:
-        # Odbieramy od klienta jego nick (pierwsza wiadomość po połączeniu)
+        # Receive client's nickname (first message after connecting)
         nickname = conn.recv(1024).decode().strip()
     except:
-        # Jeśli nie uda się odebrać zamykamy połączenie
         conn.close()
         return
 
-    # Dodajemy klienta do listy aktywnych użytkowników (zabezpieczone Lockiem)
+    # Add the client to the active users dictionary (with thread-safe lock)
     with clients_lock:
         clients[conn] = nickname
 
-    # Informacja diagnostyczna na serwerze
+    # Log connection and inform other users
     print(f"[Server] {nickname} connected from {addr}")
-
-    # Wysyłamy wiadomość powitalną do innych klientów (ale nie do nowego)
     broadcast(f"[Server] {nickname} has joined the chat!\n", exclude=conn)
 
-    # Wysyłamy informację tylko do nowego klienta
+    # Send welcome message to the connected client
     conn.send("[Server] Connected! Type /quit to exit.\n".encode())
 
-    # Główna pętla odbierająca wiadomości od klienta
+    # Main loop to receive and broadcast client messages
     while True:
         try:
             msg = conn.recv(1024).decode()
             if msg.strip() == "/quit":
-                # Jeśli klient wpisze /quit – rozłączamy go
                 break
-            # Rozsyłamy wiadomość do innych klientów
             broadcast(f"{nickname}: {msg}\n")
         except:
-            # Jeśli nastąpi błąd odbioru (np. klient zamknął aplikację)
             break
 
-    # Po opuszczeniu pętli klient się rozłącza
+    # Cleanup after client disconnects
     with clients_lock:
-        del clients[conn]  # Usuwamy go ze słownika
-
-    conn.close()  # Zamykanie socketu
-
-    # Informujemy pozostałych użytkowników o rozłączeniu klienta
+        del clients[conn]
+    conn.close()
     broadcast(f"[Server] {nickname} has left the chat.\n")
-
-    # Logujemy rozłączenie na konsoli serwera
     print(f"[Server] {nickname} disconnected")
 
-# Funkcja startująca główny serwer czatu
+# Starts the chat server
 def start_server():
-    # Tworzymy socket TCP (IPv4, strumieniowy)
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    
-    # Przypisujemy IP i port do naszego socketu
-    server.bind((HOST, PORT))
-
-    # Zaczynamy nasłuchiwać połączeń
-    server.listen()
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # TCP socket
+    server.bind((HOST, PORT))  # Bind IP and port
+    server.listen()  # Start listening for incoming connections
     print(f"[Server] Listening on {HOST}:{PORT}...")
 
-    # Nieskończona pętla serwer cały czas działa
     while True:
-        # Czekamy na nowego klienta blokujące wywołanie
-        conn, addr = server.accept()
+        conn, addr = server.accept()  # Wait for a new client
+        threading.Thread(target=handle_client, args=(conn, addr), daemon=True).start()  # Handle client in a new thread
 
-        # Dla każdego nowego klienta uruchamiamy osobny wątek
-        threading.Thread(target=handle_client, args=(conn, addr), daemon=True).start()
-
-# Uruchamiamy serwer, jeśli plik został uruchomiony bezpośrednio
+# Run the server when this file is executed directly
 if __name__ == "__main__":
     start_server()
